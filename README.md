@@ -1,32 +1,51 @@
-# React + TypeScript + Vite
+# EasyLaTeX
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Paste a table copied from Google Sheets (or any HTML table) and get clean LaTeX — no LLM, all local.
 
-Currently, two official plugins are available:
+- Preserves merged cells (`\multirow` / `\multicolumn`), alignment, bold/italic/underline.
+- Table styles: **Grid** (full borders), **Booktabs** (three-line, with auto header detection and `\cmidrule` under grouped column headers), and **Plain**.
+- Optional `table*` (two-column span), `\caption`, and `\label`.
+- **Live rendered preview** — compiles the generated LaTeX with a local `pdflatex` and shows the actual table.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Develop
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`npm run dev` also serves the render endpoint (`POST /api/render`) via a Vite middleware plugin, so the live preview works with no separate process.
+
+## Rendered preview (optional)
+
+The **Rendered Preview → Live render** toggle compiles the LaTeX server-side (`latex` → DVI → `dvisvgm` → SVG) and displays the result as a scalable vector figure. It needs a local TeX install with three extra tools:
+
+```bash
+# TeX Live / MacTeX usually already have these. On BasicTeX:
+sudo tlmgr install multirow preview dvisvgm
+```
+
+- `multirow` — used by every generated table with row spans.
+- `preview` — crops the output tightly to the table (via `tightpage`).
+- `dvisvgm` — converts the DVI to a vector SVG.
+
+No Ghostscript/poppler needed, and no client-side PDF library — the SVG is rendered natively by the browser.
+
+### Production
+
+The static frontend (`npm run build`) plus a small Node render server:
+
+```bash
+npm run build        # -> dist/
+npm run server       # -> render server on :3001 (POST /api/render)
+```
+
+Serve `dist/` behind a web server and reverse-proxy `/api` to the render server so requests are same-origin.
+
+> **Security:** `/api/render` runs `pdflatex` on caller-supplied input. It is hardened (shell-escape off, restricted file I/O, timeout, temp dir, size cap), which is fine for local/trusted use. If you expose it publicly, additionally run it inside a container or sandbox.
+
+## Test
+
+```bash
+npm test
+```

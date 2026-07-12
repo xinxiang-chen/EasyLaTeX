@@ -7,6 +7,7 @@ import { generateLatex, type TableStyle } from './generator/generateLatex';
 import { PasteZone } from './components/PasteZone';
 import { TablePreview } from './components/TablePreview';
 import { LatexOutput } from './components/LatexOutput';
+import { RenderPreview } from './components/RenderPreview';
 import { ErrorBanner } from './components/ErrorBanner';
 
 export default function App() {
@@ -76,6 +77,7 @@ export default function App() {
             onChangeLabel={setLabel}
           />
         )}
+        {latex && <RenderPreview latex={latex} />}
       </main>
     </div>
   );
