@@ -6,7 +6,7 @@ function alignChar(align: 'left' | 'center' | 'right' | null): string {
   return 'l';
 }
 
-export function deriveColumnSpec(grid: CellGrid, colCount: number): string {
+export function deriveColumnSpec(grid: CellGrid, colCount: number, bars = true): string {
   const cols: string[] = [];
 
   for (let c = 0; c < colCount; c++) {
@@ -28,5 +28,5 @@ export function deriveColumnSpec(grid: CellGrid, colCount: number): string {
     cols.push(alignChar(hasAny ? dominant : null));
   }
 
-  return '|' + cols.join('|') + '|';
+  return bars ? '|' + cols.join('|') + '|' : cols.join('');
 }

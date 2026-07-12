@@ -135,3 +135,114 @@ describe('generateLatex', () => {
     expect(latex).toContain('\\$100');
   });
 });
+
+describe('generateLatex — table styles', () => {
+  it('booktabs: no vertical bars, three rules, requires booktabs', () => {
+    const data = table([
+      [makeCell('Name'), makeCell('Score')],
+      [makeCell('Alice'), makeCell('95')],
+    ]);
+    const latex = generateLatex(data, { style: 'booktabs' });
+    expect(latex).toContain('\\begin{tabular}{ll}');
+    expect(latex).toContain('\\toprule');
+    expect(latex).toContain('\\midrule');
+    expect(latex).toContain('\\bottomrule');
+    expect(latex).not.toContain('\\hline');
+    expect(latex).not.toContain('|');
+    expect(latex).toContain('% requires: \\usepackage{booktabs, multirow}');
+  });
+
+  it('booktabs: \\midrule appears after the header row only', () => {
+    const data = table([
+      [makeCell('Name'), makeCell('Score')],
+      [makeCell('Alice'), makeCell('95')],
+      [makeCell('Bob'), makeCell('80')],
+    ]);
+    const latex = generateLatex(data, { style: 'booktabs' });
+    expect(latex.match(/\\midrule/g)).toHaveLength(1);
+    const lines = latex.split('\n');
+    const headerIdx = lines.findIndex(l => l.includes('Name'));
+    expect(lines[headerIdx + 1]).toBe('\\midrule');
+  });
+
+  it('booktabs: multi-row header emits \\cmidrule under grouped columns', () => {
+    // Row 0: [Method r=2] [CUB c=3] [Stanford c=3]
+    // Row 1: (covered)   [All][Old][New] [All][Old][New]
+    // Row 2: data
+    const centered = { bold: false, italic: false, underline: false, align: 'center' as const, color: null, backgroundColor: null };
+    const data = table([
+      [
+        makeCell('Method', { rowspan: 2 }),
+        makeCell('CUB', { colspan: 3, format: centered }),
+        makeCell('Stanford', { colspan: 3, format: centered }),
+      ],
+      [makeCell('All'), makeCell('Old'), makeCell('New'), makeCell('All'), makeCell('Old'), makeCell('New')],
+      [makeCell('SMILE'), makeCell('32.2'), makeCell('50.9'), makeCell('22.9'), makeCell('26.2'), makeCell('46.7'), makeCell('16.3')],
+    ]);
+    const latex = generateLatex(data, { style: 'booktabs' });
+    // Groups sit at columns 2-4 and 5-7 (1-indexed); Method (col 1) gets no rule
+    expect(latex).toContain('\\cmidrule(lr){2-4}');
+    expect(latex).toContain('\\cmidrule(lr){5-7}');
+    // \midrule closes the 2-row header (before the data row)
+    expect(latex).toContain('\\midrule');
+    // multicolumn without bars, centered from the cell's own align
+    expect(latex).toContain('\\multicolumn{3}{c}{CUB}');
+  });
+
+  it('plain: no rules and no bars', () => {
+    const data = table([
+      [makeCell('A'), makeCell('B')],
+      [makeCell('C'), makeCell('D')],
+    ]);
+    const latex = generateLatex(data, { style: 'plain' });
+    expect(latex).toContain('\\begin{tabular}{ll}');
+    expect(latex).not.toContain('\\hline');
+    expect(latex).not.toContain('\\toprule');
+    expect(latex).not.toContain('\\midrule');
+    expect(latex).not.toContain('|');
+  });
+
+  it('omits caption and label by default', () => {
+    const data = table([[makeCell('A')]]);
+    const latex = generateLatex(data);
+    expect(latex).not.toContain('\\caption');
+    expect(latex).not.toContain('\\label');
+  });
+
+  it('emits \\caption (escaped) above the tabular when provided', () => {
+    const data = table([[makeCell('A')]]);
+    const latex = generateLatex(data, { caption: 'Accuracy on 90% split' });
+    expect(latex).toContain('\\caption{Accuracy on 90\\% split}');
+    const lines = latex.split('\n');
+    // caption sits between \centering and \begin{tabular}
+    expect(lines.indexOf('\\centering')).toBeLessThan(lines.findIndex(l => l.startsWith('\\caption')));
+    expect(lines.findIndex(l => l.startsWith('\\caption'))).toBeLessThan(lines.findIndex(l => l.startsWith('\\begin{tabular}')));
+  });
+
+  it('emits \\label verbatim (not escaped) after the caption', () => {
+    const data = table([[makeCell('A')]]);
+    const latex = generateLatex(data, { caption: 'Cap', label: 'tab:my_results' });
+    expect(latex).toContain('\\label{tab:my_results}');
+    const lines = latex.split('\n');
+    expect(lines.findIndex(l => l.startsWith('\\caption'))).toBeLessThan(lines.findIndex(l => l.startsWith('\\label')));
+  });
+
+  it('label can be emitted without a caption', () => {
+    const data = table([[makeCell('A')]]);
+    const latex = generateLatex(data, { label: 'tab:x' });
+    expect(latex).toContain('\\label{tab:x}');
+    expect(latex).not.toContain('\\caption');
+  });
+
+  it('grid remains the default and is unchanged', () => {
+    const data = table([
+      [
+        makeCell('A', { format: { bold: false, italic: false, underline: false, align: 'left', color: null, backgroundColor: null } }),
+        makeCell('B', { format: { bold: false, italic: false, underline: false, align: 'right', color: null, backgroundColor: null } }),
+      ],
+    ]);
+    expect(generateLatex(data)).toBe(generateLatex(data, { style: 'grid' }));
+    expect(generateLatex(data)).toContain('\\begin{tabular}{|l|r|}');
+    expect(generateLatex(data)).toContain('\\hline');
+  });
+});

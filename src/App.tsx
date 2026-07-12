@@ -3,7 +3,7 @@ import './App.css';
 import type { TableData } from './types';
 import { isParseError } from './types';
 import { parseClipboardHtml } from './parser/parseClipboardHtml';
-import { generateLatex } from './generator/generateLatex';
+import { generateLatex, type TableStyle } from './generator/generateLatex';
 import { PasteZone } from './components/PasteZone';
 import { TablePreview } from './components/TablePreview';
 import { LatexOutput } from './components/LatexOutput';
@@ -11,8 +11,13 @@ import { ErrorBanner } from './components/ErrorBanner';
 
 export default function App() {
   const [tableData, setTableData] = useState<TableData | null>(null);
-  const [latex, setLatex] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [wideTable, setWideTable] = useState(false);
+  const [style, setStyle] = useState<TableStyle>('grid');
+  const [captionEnabled, setCaptionEnabled] = useState(false);
+  const [caption, setCaption] = useState('Table caption');
+  const [labelEnabled, setLabelEnabled] = useState(false);
+  const [label, setLabel] = useState('tab:label');
 
   useEffect(() => {
     const handler = (e: ClipboardEvent) => {
@@ -28,12 +33,20 @@ export default function App() {
       }
       setError(null);
       setTableData(result);
-      setLatex(generateLatex(result));
     };
 
     window.addEventListener('paste', handler);
     return () => window.removeEventListener('paste', handler);
   }, []);
+
+  const latex = tableData
+    ? generateLatex(tableData, {
+        wideTable,
+        style,
+        caption: captionEnabled ? caption : undefined,
+        label: labelEnabled ? label : undefined,
+      })
+    : null;
 
   return (
     <div className="app">
@@ -46,7 +59,23 @@ export default function App() {
         <PasteZone hasPasted={tableData !== null} />
         {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
         {tableData && <TablePreview data={tableData} />}
-        {latex && <LatexOutput latex={latex} />}
+        {latex && (
+          <LatexOutput
+            latex={latex}
+            wideTable={wideTable}
+            onToggleWideTable={() => setWideTable(v => !v)}
+            style={style}
+            onChangeStyle={setStyle}
+            captionEnabled={captionEnabled}
+            caption={caption}
+            onToggleCaption={() => setCaptionEnabled(v => !v)}
+            onChangeCaption={setCaption}
+            labelEnabled={labelEnabled}
+            label={label}
+            onToggleLabel={() => setLabelEnabled(v => !v)}
+            onChangeLabel={setLabel}
+          />
+        )}
       </main>
     </div>
   );
