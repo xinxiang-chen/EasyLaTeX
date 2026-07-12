@@ -24,6 +24,12 @@ const FONT_SIZE_OPTIONS: { value: FontSize; label: string }[] = [
 
 const DEBOUNCE_MS = 600;
 
+// Render backend URL: an explicit VITE_RENDER_API (e.g. a hosted TeX service),
+// else the Vite dev middleware in `npm run dev`, else none (static deploy).
+const RENDER_API =
+  import.meta.env.VITE_RENDER_API || (import.meta.env.DEV ? '/api/render' : '');
+const RENDER_AVAILABLE = RENDER_API !== '';
+
 type Status = 'idle' | 'loading' | 'done' | 'error';
 
 export function RenderPreview({ latex, settings, onChange }: RenderPreviewProps) {
@@ -41,7 +47,7 @@ export function RenderPreview({ latex, settings, onChange }: RenderPreviewProps)
       setStatus('loading');
       setErrorMsg(null);
       try {
-        const res = await fetch('/api/render', {
+        const res = await fetch(RENDER_API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ latex }),
@@ -93,30 +99,39 @@ export function RenderPreview({ latex, settings, onChange }: RenderPreviewProps)
       <div className="render-layout">
         <div className="render-main">
           <div className={`render-box${enabled && svgUrl && status !== 'error' ? ' render-box--paper' : ''}`}>
-            {!enabled && (
+            {!RENDER_AVAILABLE && (
+              <p className="render-hint">
+                Live preview isn't available in this deployment. The generated LaTeX below works
+                everywhere — configure a render backend (<code>VITE_RENDER_API</code>) to compile
+                and preview the table here.
+              </p>
+            )}
+            {RENDER_AVAILABLE && !enabled && (
               <p className="render-hint">
                 Enable to compile the LaTeX with a local <code>latex</code> and preview the actual table as a
                 scalable vector. Requires the render server (<code>npm run dev</code>) and TeX tools{' '}
                 <code>multirow</code>, <code>preview</code>, <code>dvisvgm</code>.
               </p>
             )}
-            {enabled && status === 'error' && <pre className="render-error">{errorMsg}</pre>}
-            {enabled && svgUrl && status !== 'error' && (
+            {RENDER_AVAILABLE && enabled && status === 'error' && <pre className="render-error">{errorMsg}</pre>}
+            {RENDER_AVAILABLE && enabled && svgUrl && status !== 'error' && (
               <img src={svgUrl} alt="Rendered LaTeX table" className="render-svg" />
             )}
           </div>
         </div>
 
         <aside className="render-controls">
-          <label className="toggle-label">
-            <input
-              type="checkbox"
-              checked={enabled}
-              onChange={() => setEnabled(v => !v)}
-              className="toggle-checkbox"
-            />
-            Live render
-          </label>
+          {RENDER_AVAILABLE && (
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={enabled}
+                onChange={() => setEnabled(v => !v)}
+                className="toggle-checkbox"
+              />
+              Live render
+            </label>
+          )}
 
           <label className="select-label">
             Style

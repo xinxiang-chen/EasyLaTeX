@@ -31,7 +31,28 @@ sudo tlmgr install multirow preview dvisvgm
 
 No Ghostscript/poppler needed, and no client-side PDF library — the SVG is rendered natively by the browser.
 
-### Production
+When no render backend is configured, the Live-render toggle is hidden and the app degrades to a pure client-side converter (the LaTeX output still works everywhere).
+
+## Deploy
+
+The converter is a **static** site — `npm run build` outputs `dist/` with no server. The `/api/render` endpoint only exists in dev (Vite middleware); it is **not** in the build.
+
+### Static hosting (Vercel / Netlify / GitHub Pages)
+
+Point the host at this repo — build `npm run build`, output directory `dist`. On Vercel the Vite preset detects both automatically; no config needed. The Live-render preview is hidden (no backend), everything else works.
+
+### Enabling Live render in production
+
+Live render needs a backend with a full TeX install running `POST /api/render` — this cannot run on Vercel serverless functions (TeX Live is too large); use a container host (Google Cloud Run, Fly.io, Render, Railway, or a VPS) built from `server/`. Then set an env var at build time so the client calls it:
+
+```bash
+# .env (see .env.example)
+VITE_RENDER_API=https://your-render-backend.example.com/api/render
+```
+
+If the backend is on a different origin, enable CORS on it (or put it behind the same domain via a rewrite).
+
+### Production (single host)
 
 The static frontend (`npm run build`) plus a small Node render server:
 
