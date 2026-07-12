@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import './App.css';
 import type { TableData } from './types';
 import { isParseError } from './types';
@@ -68,6 +69,7 @@ export default function App() {
         )}
         {latex !== null && <LatexOutput latex={latex} onEdit={setEditedLatex} />}
       </main>
+      <Analytics />
     </div>
   );
 }
