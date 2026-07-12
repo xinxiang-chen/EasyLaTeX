@@ -6,6 +6,15 @@ import { CoveredCellSet } from './mergedCellTracker';
 
 export type TableStyle = 'grid' | 'booktabs' | 'plain';
 
+export type FontSize = 'normal' | 'small' | 'footnotesize' | 'scriptsize' | 'tiny';
+
+const FONT_SIZE_CMD: Record<Exclude<FontSize, 'normal'>, string> = {
+  small: '\\small',
+  footnotesize: '\\footnotesize',
+  scriptsize: '\\scriptsize',
+  tiny: '\\tiny',
+};
+
 export interface GenerateOptions {
   wideTable?: boolean;
   style?: TableStyle;
@@ -14,6 +23,10 @@ export interface GenerateOptions {
   // identifier and passed through verbatim.
   caption?: string;
   label?: string;
+  // Layout knobs emitted just before the tabular, scoped to this table.
+  tabcolsep?: string; // \setlength{\tabcolsep}{<value>} e.g. '2pt'
+  arraystretch?: string; // \renewcommand{\arraystretch}{<value>} e.g. '1.2'
+  fontSize?: FontSize; // \small / \footnotesize / … ('normal' = omit)
 }
 
 interface StyleConfig {
@@ -174,6 +187,10 @@ export function generateLatex(tableData: TableData, options: GenerateOptions = {
   // Caption above the table (convention for tables); label after caption so \ref resolves.
   if (options.caption !== undefined) lines.push(`\\caption{${escapeLatex(options.caption)}}`);
   if (options.label !== undefined) lines.push(`\\label{${options.label}}`);
+  // Layout knobs, scoped to this table (after the caption so font size doesn't shrink it).
+  if (options.tabcolsep) lines.push(`\\setlength{\\tabcolsep}{${options.tabcolsep}}`);
+  if (options.arraystretch) lines.push(`\\renewcommand{\\arraystretch}{${options.arraystretch}}`);
+  if (options.fontSize && options.fontSize !== 'normal') lines.push(FONT_SIZE_CMD[options.fontSize]);
   lines.push(`\\begin{tabular}{${colSpec}}`);
   if (cfg.topRule) lines.push(cfg.topRule);
 

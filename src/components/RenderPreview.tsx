@@ -1,14 +1,32 @@
 import { useEffect, useState } from 'react';
+import type { TableStyle, FontSize } from '../generator/generateLatex';
+import type { TableSettings } from '../tableSettings';
 
 interface RenderPreviewProps {
   latex: string;
+  settings: TableSettings;
+  onChange: (patch: Partial<TableSettings>) => void;
 }
+
+const STYLE_OPTIONS: { value: TableStyle; label: string }[] = [
+  { value: 'grid', label: 'Grid (full borders)' },
+  { value: 'booktabs', label: 'Booktabs (three-line)' },
+  { value: 'plain', label: 'Plain (no rules)' },
+];
+
+const FONT_SIZE_OPTIONS: { value: FontSize; label: string }[] = [
+  { value: 'normal', label: 'Normal' },
+  { value: 'small', label: 'small' },
+  { value: 'footnotesize', label: 'footnotesize' },
+  { value: 'scriptsize', label: 'scriptsize' },
+  { value: 'tiny', label: 'tiny' },
+];
 
 const DEBOUNCE_MS = 600;
 
 type Status = 'idle' | 'loading' | 'done' | 'error';
 
-export function RenderPreview({ latex }: RenderPreviewProps) {
+export function RenderPreview({ latex, settings, onChange }: RenderPreviewProps) {
   const [enabled, setEnabled] = useState(false);
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -69,8 +87,27 @@ export function RenderPreview({ latex }: RenderPreviewProps) {
     <section className="section">
       <div className="section__header">
         <h3 className="section__title">Rendered Preview</h3>
-        <div className="section__controls">
-          {status === 'loading' && <span className="render-status">Rendering…</span>}
+        {status === 'loading' && <span className="render-status">Rendering…</span>}
+      </div>
+
+      <div className="render-layout">
+        <div className="render-main">
+          <div className={`render-box${enabled && svgUrl && status !== 'error' ? ' render-box--paper' : ''}`}>
+            {!enabled && (
+              <p className="render-hint">
+                Enable to compile the LaTeX with a local <code>latex</code> and preview the actual table as a
+                scalable vector. Requires the render server (<code>npm run dev</code>) and TeX tools{' '}
+                <code>multirow</code>, <code>preview</code>, <code>dvisvgm</code>.
+              </p>
+            )}
+            {enabled && status === 'error' && <pre className="render-error">{errorMsg}</pre>}
+            {enabled && svgUrl && status !== 'error' && (
+              <img src={svgUrl} alt="Rendered LaTeX table" className="render-svg" />
+            )}
+          </div>
+        </div>
+
+        <aside className="render-controls">
           <label className="toggle-label">
             <input
               type="checkbox"
@@ -80,24 +117,124 @@ export function RenderPreview({ latex }: RenderPreviewProps) {
             />
             Live render
           </label>
-        </div>
+
+          <label className="select-label">
+            Style
+            <select
+              className="style-select"
+              value={settings.style}
+              onChange={e => onChange({ style: e.target.value as TableStyle })}
+            >
+              {STYLE_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="select-label">
+            Font size
+            <select
+              className="style-select"
+              value={settings.fontSize}
+              onChange={e => onChange({ fontSize: e.target.value as FontSize })}
+            >
+              {FONT_SIZE_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="toggle-label">
+            <input
+              type="checkbox"
+              checked={settings.wideTable}
+              onChange={() => onChange({ wideTable: !settings.wideTable })}
+              className="toggle-checkbox"
+            />
+            <code className="toggle-env">table*</code>
+          </label>
+
+          <div className="field-stacked">
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={settings.captionEnabled}
+                onChange={() => onChange({ captionEnabled: !settings.captionEnabled })}
+                className="toggle-checkbox"
+              />
+              <code className="toggle-env">\caption</code>
+            </label>
+            <input
+              type="text"
+              className="field-input"
+              value={settings.caption}
+              placeholder="Table caption"
+              disabled={!settings.captionEnabled}
+              onChange={e => onChange({ caption: e.target.value })}
+            />
+          </div>
+
+          <div className="field-stacked">
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={settings.labelEnabled}
+                onChange={() => onChange({ labelEnabled: !settings.labelEnabled })}
+                className="toggle-checkbox"
+              />
+              <code className="toggle-env">\label</code>
+            </label>
+            <input
+              type="text"
+              className="field-input"
+              value={settings.label}
+              placeholder="tab:label"
+              disabled={!settings.labelEnabled}
+              onChange={e => onChange({ label: e.target.value })}
+            />
+          </div>
+
+          <div className="field-stacked">
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={settings.tabcolsepEnabled}
+                onChange={() => onChange({ tabcolsepEnabled: !settings.tabcolsepEnabled })}
+                className="toggle-checkbox"
+              />
+              <code className="toggle-env">\tabcolsep</code>
+            </label>
+            <input
+              type="text"
+              className="field-input"
+              value={settings.tabcolsep}
+              placeholder="6pt"
+              disabled={!settings.tabcolsepEnabled}
+              onChange={e => onChange({ tabcolsep: e.target.value })}
+            />
+          </div>
+
+          <div className="field-stacked">
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={settings.arraystretchEnabled}
+                onChange={() => onChange({ arraystretchEnabled: !settings.arraystretchEnabled })}
+                className="toggle-checkbox"
+              />
+              <code className="toggle-env">\arraystretch</code>
+            </label>
+            <input
+              type="text"
+              className="field-input"
+              value={settings.arraystretch}
+              placeholder="1.2"
+              disabled={!settings.arraystretchEnabled}
+              onChange={e => onChange({ arraystretch: e.target.value })}
+            />
+          </div>
+        </aside>
       </div>
-
-      {!enabled && (
-        <p className="render-hint">
-          Enable to compile the LaTeX with a local <code>latex</code> and preview the actual table as a
-          scalable vector. Requires the render server (<code>npm run dev</code>) and TeX tools{' '}
-          <code>multirow</code>, <code>preview</code>, <code>dvisvgm</code>.
-        </p>
-      )}
-
-      {enabled && status === 'error' && <pre className="render-error">{errorMsg}</pre>}
-
-      {enabled && svgUrl && (
-        <div className="render-canvas-wrap" data-empty={status !== 'done'}>
-          <img src={svgUrl} alt="Rendered LaTeX table" className="render-svg" />
-        </div>
-      )}
     </section>
   );
 }

@@ -3,7 +3,8 @@ import './App.css';
 import type { TableData } from './types';
 import { isParseError } from './types';
 import { parseClipboardHtml } from './parser/parseClipboardHtml';
-import { generateLatex, type TableStyle } from './generator/generateLatex';
+import { generateLatex } from './generator/generateLatex';
+import { DEFAULT_SETTINGS, settingsToOptions, type TableSettings } from './tableSettings';
 import { PasteZone } from './components/PasteZone';
 import { TablePreview } from './components/TablePreview';
 import { LatexOutput } from './components/LatexOutput';
@@ -13,12 +14,23 @@ import { ErrorBanner } from './components/ErrorBanner';
 export default function App() {
   const [tableData, setTableData] = useState<TableData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [wideTable, setWideTable] = useState(false);
-  const [style, setStyle] = useState<TableStyle>('grid');
-  const [captionEnabled, setCaptionEnabled] = useState(false);
-  const [caption, setCaption] = useState('Table caption');
-  const [labelEnabled, setLabelEnabled] = useState(false);
-  const [label, setLabel] = useState('tab:label');
+  const [settings, setSettings] = useState<TableSettings>(DEFAULT_SETTINGS);
+  // Manual edits to the output. Overrides the generated LaTeX until settings or
+  // the pasted table change (see the effect below), which regenerate from scratch.
+  const [editedLatex, setEditedLatex] = useState<string | null>(null);
+
+  const updateSettings = (patch: Partial<TableSettings>) =>
+    setSettings(prev => ({ ...prev, ...patch }));
+
+  const generatedLatex = tableData ? generateLatex(tableData, settingsToOptions(settings)) : null;
+
+  // Discard manual edits whenever the generated output changes (new paste or a
+  // settings tweak), so the controls stay authoritative.
+  useEffect(() => {
+    setEditedLatex(null);
+  }, [generatedLatex]);
+
+  const latex = editedLatex ?? generatedLatex;
 
   useEffect(() => {
     const handler = (e: ClipboardEvent) => {
@@ -40,44 +52,21 @@ export default function App() {
     return () => window.removeEventListener('paste', handler);
   }, []);
 
-  const latex = tableData
-    ? generateLatex(tableData, {
-        wideTable,
-        style,
-        caption: captionEnabled ? caption : undefined,
-        label: labelEnabled ? label : undefined,
-      })
-    : null;
-
   return (
     <div className="app">
       <header className="app-header">
         <h1 className="app-title">EasyLaTeX</h1>
-        <p className="app-subtitle">Google Sheets → LaTeX table, no LLM</p>
+        <p className="app-subtitle">Google Sheets → LaTeX table convertor. Generate LaTex table from Google Sheet, LLM-free, protect your data from LLM tripping!</p>
       </header>
 
       <main className="app-main">
         <PasteZone hasPasted={tableData !== null} />
         {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
         {tableData && <TablePreview data={tableData} />}
-        {latex && (
-          <LatexOutput
-            latex={latex}
-            wideTable={wideTable}
-            onToggleWideTable={() => setWideTable(v => !v)}
-            style={style}
-            onChangeStyle={setStyle}
-            captionEnabled={captionEnabled}
-            caption={caption}
-            onToggleCaption={() => setCaptionEnabled(v => !v)}
-            onChangeCaption={setCaption}
-            labelEnabled={labelEnabled}
-            label={label}
-            onToggleLabel={() => setLabelEnabled(v => !v)}
-            onChangeLabel={setLabel}
-          />
+        {latex !== null && (
+          <RenderPreview latex={latex} settings={settings} onChange={updateSettings} />
         )}
-        {latex && <RenderPreview latex={latex} />}
+        {latex !== null && <LatexOutput latex={latex} onEdit={setEditedLatex} />}
       </main>
     </div>
   );

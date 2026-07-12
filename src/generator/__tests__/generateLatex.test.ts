@@ -136,6 +136,38 @@ describe('generateLatex', () => {
   });
 });
 
+describe('generateLatex — layout knobs', () => {
+  const data = () => table([[makeCell('A'), makeCell('B')]]);
+
+  it('omits all knobs by default', () => {
+    const latex = generateLatex(data());
+    expect(latex).not.toContain('\\tabcolsep');
+    expect(latex).not.toContain('\\arraystretch');
+    expect(latex).not.toMatch(/\\(small|footnotesize|scriptsize|tiny)/);
+  });
+
+  it('emits \\tabcolsep and \\arraystretch just before the tabular', () => {
+    const latex = generateLatex(data(), { tabcolsep: '2pt', arraystretch: '1.3' });
+    expect(latex).toContain('\\setlength{\\tabcolsep}{2pt}');
+    expect(latex).toContain('\\renewcommand{\\arraystretch}{1.3}');
+    const lines = latex.split('\n');
+    const tabularIdx = lines.findIndex(l => l.startsWith('\\begin{tabular}'));
+    expect(lines.findIndex(l => l.includes('\\tabcolsep'))).toBeLessThan(tabularIdx);
+    expect(lines.findIndex(l => l.includes('\\arraystretch'))).toBeLessThan(tabularIdx);
+  });
+
+  it('emits the font-size command, and nothing for normal', () => {
+    expect(generateLatex(data(), { fontSize: 'footnotesize' })).toContain('\\footnotesize');
+    expect(generateLatex(data(), { fontSize: 'normal' })).not.toMatch(/\\(small|footnotesize|scriptsize|tiny)/);
+  });
+
+  it('font size comes after the caption so the caption stays full size', () => {
+    const latex = generateLatex(data(), { caption: 'Cap', fontSize: 'small' });
+    const lines = latex.split('\n');
+    expect(lines.findIndex(l => l.startsWith('\\caption'))).toBeLessThan(lines.findIndex(l => l === '\\small'));
+  });
+});
+
 describe('generateLatex — table styles', () => {
   it('booktabs: no vertical bars, three rules, requires booktabs', () => {
     const data = table([

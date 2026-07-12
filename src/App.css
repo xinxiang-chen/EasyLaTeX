@@ -1,8 +1,8 @@
 /* Layout */
 .app {
-  max-width: 860px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 20px 60px;
+  padding: 0 24px 60px;
   width: 100%;
 }
 
@@ -148,26 +148,7 @@
   cursor: pointer;
 }
 
-.section__options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1 1 240px;
-}
-
-.field .toggle-label {
-  flex-shrink: 0;
-}
-
 .field-input {
-  flex: 1;
-  min-width: 0;
   font-size: 13px;
   font-family: var(--mono);
   padding: 5px 10px;
@@ -216,24 +197,78 @@
   overflow-x: auto;
 }
 
-.render-canvas-wrap {
+/* The preview box fills the left column, which stretches to the controls'
+   height (align-items: stretch below), and scrolls when the table is larger. */
+.render-box {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--bg-subtle);
   padding: 16px;
-  overflow-x: auto;
   display: flex;
-  justify-content: center;
 }
 
-.render-canvas-wrap[data-empty='true'] {
-  min-height: 80px;
+/* margin:auto centers the single child on both axes and stays scroll-safe */
+.render-box > * {
+  margin: auto;
+}
+
+/* White "paper" backdrop so the black SVG table is visible in either theme */
+.render-box--paper {
+  background: #fff;
 }
 
 .render-svg {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+/* Rendered-preview two-column: SVG left, controls right, equal height */
+.render-layout {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.render-main {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+}
+
+.render-controls {
+  flex: 0 0 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-subtle);
+}
+
+.field-stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-stacked .field-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 720px) {
+  .render-layout {
+    flex-direction: column;
+  }
+  .render-controls {
+    flex-basis: auto;
+    align-self: stretch;
+  }
 }
 
 .section__title {
@@ -272,26 +307,30 @@
   white-space: nowrap;
 }
 
-/* LaTeX output */
-.latex-output {
+/* LaTeX output (editable) */
+.latex-editor {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 180px;
+  resize: vertical;
   background: var(--bg-subtle);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 16px;
   margin: 0;
-  overflow-x: auto;
+  overflow: auto;
   font-family: var(--mono);
   font-size: 13px;
   line-height: 1.6;
   color: var(--text);
   white-space: pre;
+  tab-size: 2;
 }
 
-.latex-output code {
-  background: none;
-  padding: 0;
-  font-family: inherit;
-  font-size: inherit;
+.latex-editor:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 /* Copy button */
