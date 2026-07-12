@@ -1,0 +1,179 @@
+/* Layout */
+.app {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+  width: 100%;
+}
+
+.app-header {
+  padding: 40px 0 32px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 32px;
+}
+
+.app-title {
+  font-size: 28px;
+  letter-spacing: -0.5px;
+}
+
+.app-subtitle {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Paste zone */
+.paste-zone {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 48px 24px;
+  text-align: center;
+  background: var(--bg-subtle);
+  transition: border-color 0.2s;
+}
+
+.paste-zone:hover {
+  border-color: var(--accent);
+}
+
+.paste-zone__icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  color: var(--text-muted);
+}
+
+.paste-zone__title {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.paste-zone__hint {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.paste-zone--compact {
+  padding: 12px 20px;
+  font-size: 14px;
+  color: var(--text-muted);
+  border-style: dashed;
+}
+
+/* Error banner */
+.error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: 8px;
+  color: var(--error-text);
+  font-size: 14px;
+}
+
+.error-banner__close {
+  background: none;
+  border: none;
+  color: var(--error-text);
+  font-size: 16px;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+
+/* Section */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section__title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.warning-badge {
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #b45309;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+/* Table preview */
+.table-preview-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.table-preview {
+  border-collapse: collapse;
+  min-width: 100%;
+  font-size: 13px;
+}
+
+.table-preview td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+/* LaTeX output */
+.latex-output {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 0;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre;
+}
+
+.latex-output code {
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Copy button */
+.copy-btn {
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.15s, color 0.15s;
+}
+
+.copy-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
