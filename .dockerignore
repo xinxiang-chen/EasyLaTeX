@@ -1,0 +1,10 @@
+# Don't send node_modules, dist, or local secrets into the Docker build context.
+node_modules
+dist
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+*.log
+server/__tests__
