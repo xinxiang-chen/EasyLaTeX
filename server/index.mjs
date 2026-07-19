@@ -54,5 +54,5 @@ createServer((req, res) => {
   res.end('Not found');
 }).listen(port, () => {
   console.log(`EasyLaTeX render server listening on http://localhost:${port}`);
-  console.log(`CORS allow-origin: ${allowOrigin}`);
+  console.log(`CORS allow-origin: ${allowedOrigins.join(', ')}`);
 });
