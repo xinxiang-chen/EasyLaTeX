@@ -59,6 +59,10 @@ echo "==> Deploying to Cloud Run..."
 
 ALLOW_ORIGIN_ENV="${FRONTEND_URL:-*}"
 
+# Write env vars to a YAML file to avoid gcloud's URL-escaping bug with --set-env-vars.
+ENV_FILE=$(mktemp /tmp/cloudrun-env-XXXXXX.yaml)
+printf 'ALLOW_ORIGIN: "%s"\n' "$ALLOW_ORIGIN_ENV" > "$ENV_FILE"
+
 gcloud run deploy "$SERVICE" \
   --image "$IMAGE" \
   --platform managed \
@@ -71,8 +75,10 @@ gcloud run deploy "$SERVICE" \
   --max-instances 10 \
   --concurrency 4 \
   --timeout 30 \
-  --set-env-vars "ALLOW_ORIGIN=${ALLOW_ORIGIN_ENV}" \
+  --env-vars-file "$ENV_FILE" \
   --quiet
+
+rm -f "$ENV_FILE"
 
 # ── Print the service URL ─────────────────────────────────────────────────────
 SERVICE_URL=$(gcloud run services describe "$SERVICE" \
