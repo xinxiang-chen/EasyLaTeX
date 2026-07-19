@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         texlive-latex-extra \
         texlive-fonts-recommended \
         texlive-binaries \
+        dvisvgm \
     && rm -rf /var/lib/apt/lists/*
 
 # Verify the key binaries exist — fail the build early if the image is wrong.
