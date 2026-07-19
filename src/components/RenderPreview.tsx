@@ -106,12 +106,9 @@ export function RenderPreview({ latex, settings, onChange }: RenderPreviewProps)
                 and preview the table here.
               </p>
             )}
+
             {RENDER_AVAILABLE && !enabled && (
-              <p className="render-hint">
-                Enable to compile the LaTeX with a local <code>latex</code> and preview the actual table as a
-                scalable vector. Requires the render server (<code>npm run dev</code>) and TeX tools{' '}
-                <code>multirow</code>, <code>preview</code>, <code>dvisvgm</code>.
-              </p>
+              <p className="render-hint">Enable live rendering in the panel to see the output.</p>
             )}
             {RENDER_AVAILABLE && enabled && status === 'error' && <pre className="render-error">{errorMsg}</pre>}
             {RENDER_AVAILABLE && enabled && svgUrl && status !== 'error' && (

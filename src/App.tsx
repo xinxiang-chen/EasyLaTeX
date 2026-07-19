@@ -56,8 +56,8 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1 className="app-title">EasyLaTeX</h1>
-        <p className="app-subtitle">Google Sheets → LaTeX table convertor. Generate LaTex table from Google Sheet, LLM-free, protect your data from LLM tripping!</p>
+        <h1 className="app-title">Easy-LaTeX</h1>
+        <p className="app-subtitle">Google Sheets → LaTeX table convertor. Generate LaTeX table from Google Sheet, LLM-free, protect your data from LLM tripping!</p>
       </header>
 
       <main className="app-main">
