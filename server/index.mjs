@@ -50,6 +50,7 @@ createServer((req, res) => {
     return;
   }
 
+  setCors(req, res);
   res.statusCode = 404;
   res.end('Not found');
 }).listen(port, () => {
