@@ -6,10 +6,20 @@ import { createServer } from 'node:http';
 import { handleRenderRequest } from './renderHandler.mjs';
 
 const port = Number(process.env.PORT) || 3001;
-const allowOrigin = process.env.ALLOW_ORIGIN || '*';
+// ALLOW_ORIGIN accepts a comma-separated list of origins, e.g.:
+//   ALLOW_ORIGIN=https://www.easy-latex.com,https://easy-la-tex.vercel.app
+const allowedOrigins = (process.env.ALLOW_ORIGIN || '*')
+  .split(',').map(o => o.trim()).filter(Boolean);
 
 function setCors(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', allowOrigin);
+  const origin = req.headers['origin'] || '';
+  const allowed =
+    allowedOrigins.includes('*') ? '*' :
+    allowedOrigins.includes(origin) ? origin : null;
+  if (allowed) {
+    res.setHeader('Access-Control-Allow-Origin', allowed);
+    res.setHeader('Vary', 'Origin');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Max-Age', '86400');
